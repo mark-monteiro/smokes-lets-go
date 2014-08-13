@@ -108,7 +108,7 @@ $(document).ready(function() {
 		
 		//search callback function
 		function searchCallback(results, status) {
-			if (status == google.maps.places.PlacesServiceStatus.OK) {
+			if (status == google.maps.places.PlacesServiceStatus.OK && results.length >= 3 ) {
 				console.log("Found " + results.length + " places with smokes");
 				
 				//create a marker for the current location
@@ -129,7 +129,7 @@ $(document).ready(function() {
 				
 				$("#result-wrapper").hide().removeClass('hide').fadeIn('slow');
 			}
-			else if(status == google.maps.places.PlacesServiceStatus.ZERO_RESULTS) {
+			else if(status == google.maps.places.PlacesServiceStatus.ZERO_RESULTS || results.length < 3) {
 				//expand search radius and try again
 				var newRadius = parseInt(request.radius) * 2;
 				
