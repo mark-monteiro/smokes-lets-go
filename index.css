@@ -1,24 +1,6 @@
 html, body {
 	height: 100%;
-}
-
-body {
-	background-image: -ms-linear-gradient(top, #DAD9DE 0%, #EFEFEF 100%);
-	background-image: -moz-linear-gradient(top, #DAD9DE 0%, #EFEFEF 100%);
-	background-image: -o-linear-gradient(top, #DAD9DE 0%, #EFEFEF 100%);
-	background-image: -webkit-gradient(linear, left top, left bottom, color-stop(0, #DAD9DE), color-stop(1, #EFEFEF));
-	background-image: -webkit-linear-gradient(top, #DAD9DE 0%, #EFEFEF 100%);
-	background-image: linear-gradient(to bottom, #DAD9DE 0%, #EFEFEF 100%);
-}
-
-a {
-	color: black;
-	text-decoration: none;
-	margin: 5px;
-}
-
-a:hover {
-	text-decoration: underline;
+	margin: 0;
 }
 
 #layout {
@@ -47,7 +29,13 @@ a:hover {
 	font-size: 1.5em;
 }
 
-#map-canvas {
+.hide {
+   position: absolute !important;
+   top: -9999px !important;
+   left: -9999px !important;
+}
+
+#result-wrapper {
 	position: absolute;
 	top: 0;
 	left: 0;
@@ -56,14 +44,63 @@ a:hover {
 	z-index: 5;
 }
 
-.hide {
-   position: absolute !important;
-   top: -9999px !important;
-   left: -9999px !important;
+#location-info {
+	position: absolute;
+	top: 0px;
+	padding: 0.2em;
+	margin: 0;
+}
+
+#map-canvas {
+	position: absolute;
+	left: 0px;
+	height: 100%;
+	width: 100%;
+}
+
+	#map-canvas .info {
+		white-space:nowrap;
+	}
+
+		#map-canvas .info h3,
+		#map-canvas .info p {
+			margin-top: 0px;
+			margin-bottom: 3px;
+		}
+		
+		#map-canvas .info button {
+			display: inline;
+			vertical-align: bottom;
+		}
+
+/* Bootstrap Google Maps fix
+ html, body, #result-wrapper, #map-canvas { height: 100% }
+#map-canvas,
+#map-canvas * { .box-sizing(content-box); }
+*/
+		
+#results {
+	position: absolute;
+	bottom: 0px;
+	height: 4em;
+}
+
+#place-info {
+	display: none;
+}
+
+.overlay {
+	background-color: rgba(215, 215, 215,0.7);
+	z-index: 10;
+	padding: 0.3em;
 }
 
 footer {
 	position: absolute;
 	bottom: 0;
 	padding: 10px;
+}
+
+footer a {
+	font-family: 'Oswald', sans-serif;
 }
