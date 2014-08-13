@@ -1,17 +1,129 @@
 $(document).ready(function() {
-	var finished;
+	var loadAnimator;
+	var initialized = false;
+	var currentPosition;
+	var map;
+	var service;
+	var directionsDisplay;
+	var directionsService;
+	var locationWatcher;
+	var locationMarker;
+	var startMarker;
+	var infoWindow;
 	
+	//start initializing right away
+	initialize();
+	
+	//on button click, start loader and perform search
 	$('button').click(function() {
 		startLoader();
-		getLocation(findSmokes);
+		findSmokes();
 	});
 	
-	//start the loading animation
+	//initialize the page
+	function initialize() {
+		function initLocation(callback) {
+		
+			var onSuccess = function(position) {
+				var firstCall = currentPosition === undefined;
+				console.log("Got location: (" + position.coords.latitude + "," + position.coords.longitude + ")");
+				currentPosition = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
+				
+				//execute callback function on the first location update only
+				if(firstCall && initialized === false) {
+					callback(currentPosition);
+				}
+				else if(initialized === true) {
+					//update marker position
+					locationMarker.setPosition(currentPosition)
+				}
+			};
+
+			function onError(error) {
+				console.log("Error determining location:\n" + 
+					'code: '    + error.code    + '\n' +
+					'message: ' + error.message + '\n');
+				
+				var posIntialized = currentPosition === undefined
+				var errorWord = posIntialized ? "determining" : "updating";
+				
+				if (error.code == error.PERMISSION_DENIED) {
+					alert("Hey there stupidyhead, we can't find you smokes unless you give this app permission to use your location. Fuck sakes.");
+				}
+				else if (error.code == error.POSITION_UNAVAILABLE) {
+					alert('Where in the fuck are you?! (An error occured while ' + errorWord + ' your location)');
+				}
+				else {
+					alert('Where in the fuck are you?! (An error occured while ' + errorWord + ' your location)');
+				}
+				
+				//stop the location updater
+				navigator.geolocation.clearWatch(locationWatcher);
+				locationWatcher = undefined;
+			}
+
+			//start watching the user's current location
+			locationWatcher = navigator.geolocation.watchPosition(onSuccess, onError);
+		}
+		
+		function finishInit(position) {
+			//create the map
+			map = new google.maps.Map(document.getElementById('map-canvas'), {
+				center: position,
+				zoom: 10,
+				panControl: false,
+				rotateControl: false,
+				scaleControl: false,
+				streetViewControl: false,
+				zoomControl: false,
+			});
+			
+			//initialize places service
+			service = new google.maps.places.PlacesService(map);
+			
+			//initialize direction services
+			directionsService = new google.maps.DirectionsService();
+			directionsDisplay = new google.maps.DirectionsRenderer({
+				markerOptions: {
+					visible: false
+				}
+			});
+			directionsDisplay.setMap(map);
+			
+			//create info window
+			infoWindow = new google.maps.InfoWindow();
+			google.maps.event.addListener(infoWindow, 'domready', function(){
+				//remove close button when opened
+				$(".gm-style-iw")
+					.css("left", function() {
+						return ($(this).parent().width() - $(this).width()) / 2;
+					})
+					.next("div").remove();
+			});
+			
+			//create a marker for the current location
+			locationMarker = new google.maps.Marker({
+				map: map,
+				position: position,
+				icon: 'images/youarehere-2.png',
+				clickable: false,
+				optimized: false
+			});
+			
+			//set flag
+			initialized = true;
+		};
+		
+		//initialize location tracking then continue other initialization
+		initLocation(finishInit);
+	}
+	
+	//starts the loading animation
 	function startLoader() {
 		//start animating the ellipses
 		var ellipses = $('#loader span.ellipses');
 		var padding = $('#loader span.padding');
-		finished = window.setInterval(animateLoader, 1000);
+		loadAnimator = window.setInterval(animateLoader, 1000);
 		
 		//hide the button and show the loader
 		$('#layout button').fadeOut(function() {
@@ -26,121 +138,43 @@ $(document).ready(function() {
 		}
 	}
 	
-	//get the initial location
-	function getLocation(callback) {
-		// onSuccess Callback
-		//   This method accepts a `Position` object, which contains
-		//   the current GPS coordinates
-		//
-		var onSuccess = function(position) {
-			console.log("Got location: (" + position.coords.latitude + "," + position.coords.longitude + ")");
-			callback(new google.maps.LatLng(position.coords.latitude, position.coords.longitude));
-		};
-
-		// onError Callback receives a PositionError object
-		//
-		function onError(error) {
-			console.log("Error determining location:\n" + 
-				'code: '    + error.code    + '\n' +
-				'message: ' + error.message + '\n');
-				
-			if (error.code == error.PERMISSION_DENIED) {
-				alert("Hey there stupidyhead, we can't find you smokes unless you give this app permission to use your location. Fuck sakes.");
-			}
-			else if (error.code == error.POSITION_UNAVAILABLE) {
-				//TODO: provide search to select location
-				alert('Where in the fuck are you?! (An error occured while determining your location)');
-			}
-			else {
-				alert('Where in the fuck are you?! (An error occured while determining your location)');
-			}
+	//performs search
+	function findSmokes() {
+		//wait for initialization to complete
+		if ( !initialized ) {
+			setTimeout(findSmokes, 250);
+			return;
 		}
-
-		navigator.geolocation.getCurrentPosition(onSuccess, onError);
-	}
-	
-	function findSmokes(position) {
-		var map;
-		var service;
-		var directionsDisplay;
-		var directionsService;
-		var infoWindow;
 		
-		map = new google.maps.Map(document.getElementById('map-canvas'), {
-			center: position,
-			zoom: 10,
-			panControl: false,
-			rotateControl: false,
-			scaleControl: false,
-			streetViewControl: false,
-			zoomControl: false,
-		});
-
-		//create info window
-		infowindow = new google.maps.InfoWindow();
-		google.maps.event.addListener(infowindow, 'domready', function(){
-			//remove close button when opened
-			$(".gm-style-iw")
-				.css("left", function() {
-					return ($(this).parent().width() - $(this).width()) / 2;
-				})
-				.next("div").remove();
-		});
-		
-		//initialize places service and perform search
+		//perform search
+		var searchRadius = 250;
 		var request = {
-			location: position,
-			radius: '250',
+			location: currentPosition,
+			radius: searchRadius.toString(),
 			/*openNow: true,*/
-			types: ['convenience_store']
+			types: ['convenience_store', 'gas_station']
 		};
-		service = new google.maps.places.PlacesService(map);
 		service.nearbySearch(request, searchCallback);
-
-		//initialize direction services
-		directionsService = new google.maps.DirectionsService();
-		directionsDisplay = new google.maps.DirectionsRenderer({
-			markerOptions: {
-				visible: false
-			}
-		});
-		directionsDisplay.setMap(map);
 		
-		//search callback function
 		function searchCallback(results, status) {
+			//if the search returned at least 3 results
 			if (status == google.maps.places.PlacesServiceStatus.OK && results.length >= 3 ) {
-				console.log("Found " + results.length + " places with smokes");
-				
-				//create a marker for the current location
-				var currLoc = new google.maps.Marker({
-					map: map,
-					position: position,
-					icon: 'images/youarehere-2.png',
-					clickable: false
-				});
-				
-				//create a marker for each location and expand the map to show all points
-				var bounds = new google.maps.LatLngBounds(position, position);
-				$.each(results, function(index, place) {
-					createMarker(place, false /*index === 0*/);
-					bounds.extend(place.geometry.location);
-				});
-				map.fitBounds(bounds);
-				
-				$("#result-wrapper").hide().removeClass('hide').fadeIn('slow');
+				console.log("Found " + results.length + " places with smokes:");
+				displayResults(results);
 			}
+			//if search returned less than three results
 			else if(status == google.maps.places.PlacesServiceStatus.ZERO_RESULTS || results.length < 3) {
-				//expand search radius and try again
-				var newRadius = parseInt(request.radius) * 2;
-				
 				//don't search farther than 32km
-				if(newRadius > 32000) {
+				if(searchRadius > 32000) {
+					console.log("No smokes within 32000m of current location");
 					alert("This is fucked! There's nowhere to get smokes anywhere near you!");
 					return;
 				}
 				
-				console.log("Expanding search radius to " + newRadius + " meters");
-				request.radius = newRadius.toString();
+				//double the search radius and try again
+				searchRadius *= 2;
+				request.radius = searchRadius.toString();
+				console.log("Expanding search radius to " + request.radius + " meters");
 				service.nearbySearch(request, searchCallback);
 			}
 			else {
@@ -148,15 +182,36 @@ $(document).ready(function() {
 				alert("Sorry, something fucked up! Try again later.");
 			}
 		}
+	}
+	
+	function displayResults(results) {
+		//TODO: order results by distance and limit to maximum 10 results
+		var bounds = new google.maps.LatLngBounds(currentPosition, currentPosition);
+		
+		$.each(results, function(index, place) {
+			//create a marker for this location and expand the map to show it
+			var loc = place.geometry.location;
+			console.log("  - " + place.name + " (" + loc.lat() + "," + loc.lng() + ")");
+			bounds.extend(loc);
+			map.fitBounds(bounds);
+			createMarker(place, false /*index === 0*/);
+		});
+		
+		//show the map and stop the loader
+		$("#result-wrapper").hide().removeClass('hide').fadeIn('slow', function() {
+			window.clearInterval(loadAnimator);
+			//TODO: callback function here?
+		});
 		
 		//creates a marker on the map for a smokes location
 		//with an associated info window and optionally opens it
 		function createMarker(place, open) {
-			var placeLoc = place.geometry.location;
+			var loc = place.geometry.location;
 			var marker = new google.maps.Marker({
 				map: map,
-				position: place.geometry.location,
-				icon: 'images/smoking-icon.png'
+				position: loc,
+				icon: 'images/smoking-icon.png',
+				animation: google.maps.Animation.DROP
 			});
 			
 			if(open === true) {
@@ -167,61 +222,77 @@ $(document).ready(function() {
 			google.maps.event.addListener(marker, 'click', function() {
 				setInfoWindow(place, this);
 			});
-		}
-		
-		//set the content for the info window with the associated place and open it
-		function setInfoWindow(place, marker) {
-			//clone a new element for window content and set the place name
-			var content = $("#place-info").clone().removeAttr('id');
-			content.find('.name').text(place.name);
 			
-			//set address if available
-			if(typeof place.formatted_address === 'undefined') {
-				content.find('.address').remove();
-			}
-			else {
-				content.find('.address').text(place.formatted_address);
-			}
-			
-			//set phone number if available
-			if(typeof place.formatted_phone_number === 'undefined') {
-				content.find('.phone').remove();
-			}
-			else {
-				content.find('.phone').prop('href', 'tel:' + place.formatted_phone_number).text(place.formatted_phone_number);
-			}
-			
-			//set directions link
-			content.find('button').click(function() {
-				calcRoute(place.geometry.location);
-				infowindow.close();
-			});
-			
-			//set the window content and open it
-			infowindow.setContent(content[0]);
-			infowindow.open(map, marker);
-		}
-	
-		//gets the route to the specified location and displays it on the map
-		function calcRoute(destination) {
-			var request = {
-				origin:position,
-				destination:destination,
-				travelMode: google.maps.TravelMode.DRIVING
-			};
-			
-			directionsService.route(request, function(result, status) {
-				if (status == google.maps.DirectionsStatus.OK) {
-				  directionsDisplay.setDirections(result);
+			//set the content for the info window with the associated place and open it
+			function setInfoWindow(place, marker) {
+				//clone a new element for window content and set the place name
+				var content = $("#place-info").clone().removeAttr('id');
+				content.find('.name').text(place.name);
+				
+				//set address if available
+				if(typeof place.formatted_address === 'undefined') {
+					content.find('.address').remove();
 				}
 				else {
-					//TODO: handle (https://developers.google.com/maps/documentation/javascript/reference#DirectionsStatus)
+					content.find('.address').text(place.formatted_address);
 				}
-			});
+				
+				//set phone number if available
+				if(typeof place.formatted_phone_number === 'undefined') {
+					content.find('.phone').remove();
+				}
+				else {
+					content.find('.phone').prop('href', 'tel:' + place.formatted_phone_number).text(place.formatted_phone_number);
+				}
+				
+				//set directions button action
+				//TODO: move to init (make calcroute get location from the infoWindow)
+				content.find('button').click(function() {
+					calcRoute(place.geometry.location);
+					infoWindow.close();
+				});
+				
+				//set the window content and open it
+				infoWindow.setContent(content[0]);
+				infoWindow.open(map, marker);
+			}
 		}
+	}
+	
+	//gets the route to the specified location and displays it on the map
+	function calcRoute(destination) {
+		var request = {
+			origin:currentPosition,
+			destination:infoWindow.getAnchor().position,
+			travelMode: google.maps.TravelMode.DRIVING
+		};
 		
-		function positionUpdated(position) {
-			
-		}
+		directionsService.route(request, function(result, status) {
+			if (status == google.maps.DirectionsStatus.OK) {
+				//close the old start marker, if any
+				if(startMarker !== undefined) {
+					startMarker.setMap(null);
+				}
+				
+				//create a new marker for the start location
+				startMarker = new google.maps.Marker({
+					map: map,
+					position: request.origin,
+					icon: 'images/start.png'
+				});
+				
+				//change the icon for current position
+				locationMarker.setIcon({
+					anchor: new google.maps.Point(10, 10),
+					url: 'images/marker-current-location.gif'
+				});
+				
+				//display the route on the map
+				directionsDisplay.setDirections(result);
+			}
+			else {
+				//TODO: handle this (see: https://developers.google.com/maps/documentation/javascript/reference#DirectionsStatus)
+			}
+		});
 	}
 });
