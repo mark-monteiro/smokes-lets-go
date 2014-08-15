@@ -1,14 +1,15 @@
 $(document).ready(function() {
 	var loadAnimator;
 	var initialized = false;
-	var currentPosition;
 	var map;
 	var service;
 	var directionsDisplay;
 	var directionsService;
 	var locationWatcher;
+	var 	;
 	var locationMarker;
 	var startMarker;
+	var smokesMarkers = [];
 	var infoWindow;
 	
 	//start initializing right away
@@ -22,6 +23,9 @@ $(document).ready(function() {
 	
 	//initialize the page
 	function initialize() {
+		//initialize location tracking then continue other initialization
+		initLocation(finishInit);
+		
 		function initLocation(callback) {
 		
 			var onSuccess = function(position) {
@@ -33,7 +37,7 @@ $(document).ready(function() {
 				if(firstCall && initialized === false) {
 					callback(currentPosition);
 				}
-				else if(initialized === true) {
+				else if(initialized === true && locationMarker !== undefined) {
 					//update marker position
 					locationMarker.setPosition(currentPosition)
 				}
@@ -75,7 +79,7 @@ $(document).ready(function() {
 				rotateControl: false,
 				scaleControl: false,
 				streetViewControl: false,
-				zoomControl: false,
+				zoomControl: false
 			});
 			
 			//initialize places service
@@ -101,21 +105,33 @@ $(document).ready(function() {
 					.next("div").remove();
 			});
 			
-			//create a marker for the current location
-			locationMarker = new google.maps.Marker({
+			//create a marker for the start location
+			startMarker = new google.maps.Marker({
 				map: map,
 				position: position,
 				icon: 'images/youarehere-2.png',
 				clickable: false,
-				optimized: false
+				draggable: true,
 			});
+			
+			
+			google.maps.event.addListener(startMarker, 'dragend', function(mouseEvent) {
+				console.log("Moved start position to " + mouseEvent.latLng.toString());
+				
+				if(locationMarker !== undefined) {
+					//start position moved; look up new directions
+					var destination = directionsDisplay.getDirections().routes[0].overview_path.slice(-1)[0];
+					calcRoute(destination);
+				}
+				else { //if(calcDistance(mouseEvent.latLng, startPosition) > 10km) {
+					//start location moved outside threshold radius; perform new search
+					findSmokes();
+				}
+			})
 			
 			//set flag
 			initialized = true;
 		};
-		
-		//initialize location tracking then continue other initialization
-		initLocation(finishInit);
 	}
 	
 	//starts the loading animation
@@ -149,7 +165,7 @@ $(document).ready(function() {
 		//perform search
 		var searchRadius = 250;
 		var request = {
-			location: currentPosition,
+			location: startMarker.getPosition(),
 			radius: searchRadius.toString(),
 			/*openNow: true,*/
 			types: ['convenience_store', 'gas_station']
@@ -186,22 +202,33 @@ $(document).ready(function() {
 	
 	function displayResults(results) {
 		//TODO: order results by distance and limit to maximum 10 results
-		var bounds = new google.maps.LatLngBounds(currentPosition, currentPosition);
+		//TODO: detect the first results in a better way
+		var firstResults = $("#result-wrapper").hasClass('hide');
+		var bounds = new google.maps.LatLngBounds(startMarker.getPosition());
+		var existingLocations = smokesMarkers.map(function(marker) { return marker.getPosition(); });
 		
 		$.each(results, function(index, place) {
-			//create a marker for this location and expand the map to show it
 			var loc = place.geometry.location;
-			console.log("  - " + place.name + " (" + loc.lat() + "," + loc.lng() + ")");
+			var isNewLoc = $.grep(existingLocations, function(existing) { return existing.lat() === loc.lat() && existing.lng() === loc.lng()}).length === 0;
 			bounds.extend(loc);
-			map.fitBounds(bounds);
-			createMarker(place, false /*index === 0*/);
+			
+			if(isNewLoc) {
+				//create a marker for this location and expand the map to show it
+				console.log("  - " + place.name + " " + loc.toString());
+				map.fitBounds(bounds);
+				createMarker(place, false /*index === 0*/);
+			}
 		});
 		
+		//TODO: remove old markers outside a certain radius
+		
 		//show the map and stop the loader
-		$("#result-wrapper").hide().removeClass('hide').fadeIn('slow', function() {
-			window.clearInterval(loadAnimator);
-			//TODO: callback function here?
-		});
+		if(firstResults) {
+			$("#result-wrapper").hide().removeClass('hide').fadeIn('slow', function() {
+				window.clearInterval(loadAnimator);
+				//TODO: callback function here?
+			});
+		}
 		
 		//creates a marker on the map for a smokes location
 		//with an associated info window and optionally opens it
@@ -213,6 +240,7 @@ $(document).ready(function() {
 				icon: 'images/smoking-icon.png',
 				animation: google.maps.Animation.DROP
 			});
+			smokesMarkers.push(marker);
 			
 			if(open === true) {
 				setInfoWindow(place, marker);
@@ -246,7 +274,6 @@ $(document).ready(function() {
 				}
 				
 				//set directions button action
-				//TODO: move to init (make calcroute get location from the infoWindow)
 				content.find('button').click(function() {
 					calcRoute(place.geometry.location);
 					infoWindow.close();
@@ -262,33 +289,34 @@ $(document).ready(function() {
 	//gets the route to the specified location and displays it on the map
 	function calcRoute(destination) {
 		var request = {
-			origin:currentPosition,
-			destination:infoWindow.getAnchor().position,
+			origin:startMarker.getPosition(),
+			destination:destination,
 			travelMode: google.maps.TravelMode.DRIVING
 		};
+		console.log("Calculating directions from " + request.origin + " to " + request.destination);
 		
 		directionsService.route(request, function(result, status) {
 			if (status == google.maps.DirectionsStatus.OK) {
-				//close the old start marker, if any
-				if(startMarker !== undefined) {
-					startMarker.setMap(null);
+				//create marker for the updating current location
+				if(locationMarker == undefined) {
+					locationMarker = new google.maps.Marker({
+						map: map,
+						position: currentPosition,
+						optimized: false,
+						icon: {
+							anchor: new google.maps.Point(10, 10),
+							url: 'images/marker-current-location.gif'
+						}
+					});
+					console.log("Created current position marker at" + currentPosition.toString());
 				}
 				
-				//create a new marker for the start location
-				startMarker = new google.maps.Marker({
-					map: map,
-					position: request.origin,
-					icon: 'images/start.png'
-				});
-				
-				//change the icon for current position
-				locationMarker.setIcon({
-					anchor: new google.maps.Point(10, 10),
-					url: 'images/marker-current-location.gif'
-				});
+				//change the icon for start position
+				startMarker.setIcon('images/start.png');
 				
 				//display the route on the map
 				directionsDisplay.setDirections(result);
+				console.log("Successfully displayed route");
 			}
 			else {
 				//TODO: handle this (see: https://developers.google.com/maps/documentation/javascript/reference#DirectionsStatus)
