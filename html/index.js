@@ -10,6 +10,8 @@ $(document).ready(function() {
 	var locationMarker;
 	var startMarker;
 	var infoWindow;
+	var startPosition;
+	
 	
 	//start initializing right away
 	initialize();
@@ -23,19 +25,39 @@ $(document).ready(function() {
 	//initialize the page
 	function initialize() {
 		function initLocation(callback) {
-		
+			
 			var onSuccess = function(position) {
-				var firstCall = currentPosition === undefined;
-				console.log("Got location: (" + position.coords.latitude + "," + position.coords.longitude + ")");
-				currentPosition = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
 				
+				var firstCall = currentPosition === undefined;
+				
+				console.log("Got location: (" + position.coords.latitude +"," + position.coords.longitude +")");
+				currentPosition = new google.maps.LatLng(position.coords.latitude, position.coords.longitude );
+				
+
 				//execute callback function on the first location update only
 				if(firstCall && initialized === false) {
 					callback(currentPosition);
+					startPosition = currentPosition;
+					
 				}
 				else if(initialized === true) {
 					//update marker position
-					locationMarker.setPosition(currentPosition)
+					locationMarker.setPosition(currentPosition) ;
+
+					
+					// declares East west distance, North south distance and earth's radius
+					var distanceEw ;
+					var dcistanceNs ;
+					var distanceInit ;
+					var ER = 6371 ;
+					
+					distanceEw = (currentPosition.lng() - startPosition.lng()) * Math.cos(startPosition.lat()) ;
+					dcistanceNs = (currentPosition.lat() - startPosition.lat()) ;
+					distanceInit = Math.sqrt(distanceEw * distanceEw + dcistanceNs * dcistanceNs) * ER ;
+					// check if location is greater than 5 km and re-search
+					if (distanceInit >= 5 ) {
+						findSmokes() ;
+					}
 				}
 			};
 
@@ -48,10 +70,10 @@ $(document).ready(function() {
 				var errorWord = posIntialized ? "determining" : "updating";
 				
 				if (error.code == error.PERMISSION_DENIED) {
-					alert("Hey there stupidyhead, we can't find you smokes unless you give this app permission to use your location. Fuck sakes.");
+					alert("HORSECOCK, we can't find you smokes unless you give this app permission to use your location. Fuck sakes.");
 				}
 				else if (error.code == error.POSITION_UNAVAILABLE) {
-					alert('Where in the fuck are you?! (An error occured while ' + errorWord + ' your location)');
+					alert('WHAT in the FUCK?! (An error occured while ' + errorWord + ' your location)');
 				}
 				else {
 					alert('Where in the fuck are you?! (An error occured while ' + errorWord + ' your location)');
