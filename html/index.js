@@ -353,7 +353,7 @@ $(document).ready(function() {
 				directionsDisplay.setDirections(result);
 				console.log("Successfully displayed route");
 			}
-			else if(status === google.maps.DirectionsStatus.ZERO_RESULTS {
+			else if(status === google.maps.DirectionsStatus.ZERO_RESULTS) {
 				console.log("Error: No direction results found");
 				alert("Frozen mixed vegetable cocks!! Google couldn't figure out how to get there!");
 			}
