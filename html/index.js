@@ -1,20 +1,26 @@
 $(document).ready(function() {
-	var loadAnimator;
+	//local variables
 	var initialized = false;
+	var loadAnimator;
+	var checkDistance = true;
+	
+	//google.maps API objects
 	var map;
-	var service;
+	var placesService;
 	var directionsDisplay;
 	var directionsService;
-	var locationWatcher;
-	var 	;
-	var locationMarker;
-	var startMarker;
-	var smokesMarkers = [];
 	var infoWindow;
+	var displayBounds;
+	
+	//Locations and Markers
+	var locationWatcher;
 	var startPosition;
+	var startMarker;
+	var currentPosition;
+	var currentMarker;
+	var smokesMarkers = [];
 	
-	
-	//start initializing right away
+	//start initialization
 	initialize();
 	
 	//on button click, start loader and perform search
@@ -23,44 +29,53 @@ $(document).ready(function() {
 		findSmokes();
 	});
 	
-	//initialize the page
 	function initialize() {
 		//initialize location tracking then continue other initialization
-		initLocation(finishInit);
+		initLocationService(finishInit);
 		
-		function initLocation(callback) {
+		function initLocationService(callback) {
+			//start watching the user's current location
+			locationWatcher = navigator.geolocation.watchPosition(onSuccess, onError);
 			
-			var onSuccess = function(position) {
-				
-				var firstCall = currentPosition === undefined;
-				
+			offset = 0;
+			function onSuccess(position) {
+				position.coords.latitude += offset;
+				position.coords.longitude += offset;
+				offset += 0.05;
+			
 				console.log("Got location: (" + position.coords.latitude +"," + position.coords.longitude +")");
+				var firstCall = currentPosition === undefined;
 				currentPosition = new google.maps.LatLng(position.coords.latitude, position.coords.longitude );
-				
 
-				//execute callback function on the first location update only
 				if(firstCall && initialized === false) {
+					//execute callback function on the first location update only
 					callback(currentPosition);
 					startPosition = currentPosition;
-					
 				}
-				else if(initialized === true && locationMarker !== undefined) {
+				else if(initialized === true && currentMarker !== undefined) {
 					//update marker position
-					locationMarker.setPosition(currentPosition) ;
+					currentMarker.setPosition(currentPosition);
 
-					
-					// declares East west distance, North south distance and earth's radius
-					var distanceEw ;
-					var dcistanceNs ;
-					var distanceInit ;
-					var ER = 6371 ;
-					
-					distanceEw = (currentPosition.lng() - startPosition.lng()) * Math.cos(startPosition.lat()) ;
-					dcistanceNs = (currentPosition.lat() - startPosition.lat()) ;
-					distanceInit = Math.sqrt(distanceEw * distanceEw + dcistanceNs * dcistanceNs) * ER ;
-					// check if location is greater than 5 km and re-search
-					if (distanceInit >= 5 ) {
-						findSmokes() ;
+					//TODO: only search if user is outside the original search bounds
+					if (checkDistance && calcDistance(currentPosition, startPosition) >= 5 ) {
+						// user has moved 5km from start position; ask if they want to search again
+						navigator.notification.confirm(
+							"We have detected that you've moved away from the original smokes. Want to search again?",
+							function(result) {
+								if(result === 1) {
+									//update the start position to be the current position
+									//and perform a new search
+									startPosition = currentPosition;
+									startMarker.setPosition(startPosition);
+									findSmokes();
+								}
+								else {
+									//never ask again
+									checkDistance = false;
+								}
+							},
+							"Confirm",
+							"Fuck Yeah!,Fuck No!");
 					}
 				}
 			};
@@ -87,9 +102,6 @@ $(document).ready(function() {
 				navigator.geolocation.clearWatch(locationWatcher);
 				locationWatcher = undefined;
 			}
-
-			//start watching the user's current location
-			locationWatcher = navigator.geolocation.watchPosition(onSuccess, onError);
 		}
 		
 		function finishInit(position) {
@@ -105,7 +117,7 @@ $(document).ready(function() {
 			});
 			
 			//initialize places service
-			service = new google.maps.places.PlacesService(map);
+			placesService = new google.maps.places.PlacesService(map);
 			
 			//initialize direction services
 			directionsService = new google.maps.DirectionsService();
@@ -136,17 +148,16 @@ $(document).ready(function() {
 				draggable: true,
 			});
 			
-			
 			google.maps.event.addListener(startMarker, 'dragend', function(mouseEvent) {
 				console.log("Moved start position to " + mouseEvent.latLng.toString());
 				
-				if(locationMarker !== undefined) {
+				if(currentMarker !== undefined) {
 					//start position moved; look up new directions
 					var destination = directionsDisplay.getDirections().routes[0].overview_path.slice(-1)[0];
 					calcRoute(destination);
 				}
-				else { //if(calcDistance(mouseEvent.latLng, startPosition) > 10km) {
-					//start location moved outside threshold radius; perform new search
+				else if(!displayBounds.contains(mouseEvent.latLng)) {
+					//start location moved outside result bounds; perform new search
 					findSmokes();
 				}
 			})
@@ -172,7 +183,7 @@ $(document).ready(function() {
 		function animateLoader() {
 			var length = (ellipses.text().length + 1) % 5;
 			ellipses.text(Array(length + 1).join("."));
-			padding.text(Array(length + 1).join('\xA0'));	//add padding to the front of the loader to keep it centered
+			padding.text(Array(length + 1).join('\xA0'));	//add padding to the front of the loader to keep it centred
 		}
 	}
 	
@@ -192,7 +203,7 @@ $(document).ready(function() {
 			/*openNow: true,*/
 			types: ['convenience_store', 'gas_station']
 		};
-		service.nearbySearch(request, searchCallback);
+		placesService.nearbySearch(request, searchCallback);
 		
 		function searchCallback(results, status) {
 			//if the search returned at least 3 results
@@ -213,7 +224,7 @@ $(document).ready(function() {
 				searchRadius *= 2;
 				request.radius = searchRadius.toString();
 				console.log("Expanding search radius to " + request.radius + " meters");
-				service.nearbySearch(request, searchCallback);
+				placesService.nearbySearch(request, searchCallback);
 			}
 			else {
 				console.log("Error querying the the Google Map API:\n" + status);
@@ -226,23 +237,25 @@ $(document).ready(function() {
 		//TODO: order results by distance and limit to maximum 10 results
 		//TODO: detect the first results in a better way
 		var firstResults = $("#result-wrapper").hasClass('hide');
-		var bounds = new google.maps.LatLngBounds(startMarker.getPosition());
 		var existingLocations = smokesMarkers.map(function(marker) { return marker.getPosition(); });
+		displayBounds = new google.maps.LatLngBounds(startMarker.getPosition());
 		
 		$.each(results, function(index, place) {
 			var loc = place.geometry.location;
 			var isNewLoc = $.grep(existingLocations, function(existing) { return existing.lat() === loc.lat() && existing.lng() === loc.lng()}).length === 0;
-			bounds.extend(loc);
+			
+			//include this location in the display bounds
+			displayBounds.extend(loc);
+			console.log("  - " + place.name + " " + loc.toString());
 			
 			if(isNewLoc) {
 				//create a marker for this location and expand the map to show it
-				console.log("  - " + place.name + " " + loc.toString());
-				map.fitBounds(bounds);
+				map.fitBounds(displayBounds);
 				createMarker(place, false /*index === 0*/);
 			}
 		});
 		
-		//TODO: remove old markers outside a certain radius
+		//TODO: remove old markers outside a certain radius?
 		
 		//show the map and stop the loader
 		if(firstResults) {
@@ -318,10 +331,10 @@ $(document).ready(function() {
 		console.log("Calculating directions from " + request.origin + " to " + request.destination);
 		
 		directionsService.route(request, function(result, status) {
-			if (status == google.maps.DirectionsStatus.OK) {
+			if (status === google.maps.DirectionsStatus.OK) {
 				//create marker for the updating current location
-				if(locationMarker == undefined) {
-					locationMarker = new google.maps.Marker({
+				if(currentMarker == undefined) {
+					currentMarker = new google.maps.Marker({
 						map: map,
 						position: currentPosition,
 						optimized: false,
@@ -340,9 +353,23 @@ $(document).ready(function() {
 				directionsDisplay.setDirections(result);
 				console.log("Successfully displayed route");
 			}
+			else if(status === google.maps.DirectionsStatus.ZERO_RESULTS {
+				console.log("Error: No direction results found");
+				alert("Frozen mixed vegetable cocks!! Google couldn't figure out how to get there!");
+			}
 			else {
-				//TODO: handle this (see: https://developers.google.com/maps/documentation/javascript/reference#DirectionsStatus)
+				console.log("Error determining route: " + status);
+				alert("Fuck off with the errors! Sorry, something fucked up while finding directions. Try again later.");
 			}
 		});
+	}
+	
+	//utility function to calculate the distance (in km)
+	//between two instances of google.maps.LatLng objects
+	function calcDistance(pos1, pos2) {
+		var EARTH_RADIUS = 6371 ;
+		var distanceEw = (pos1.lng() - pos2.lng()) * Math.cos(startPosition.lat()) ;
+		var dcistanceNs = (pos1.lat() - pos2.lat()) ;
+		return Math.sqrt(distanceEw * distanceEw + dcistanceNs * dcistanceNs) * ER ;
 	}
 });
