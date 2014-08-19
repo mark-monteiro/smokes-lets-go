@@ -43,7 +43,7 @@ $(document).ready(function() {
 				position.coords.longitude += offset;
 				offset += 0.05;
 			
-				console.log("Got location: (" + position.coords.latitude +"," + position.coords.longitude +")");
+				console.info("Got location: (" + position.coords.latitude +"," + position.coords.longitude +")");
 				var firstCall = currentPosition === undefined;
 				currentPosition = new google.maps.LatLng(position.coords.latitude, position.coords.longitude );
 
@@ -81,7 +81,7 @@ $(document).ready(function() {
 			};
 
 			function onError(error) {
-				console.log("Error determining location:\n" + 
+				console.error("Error determining location:\n" + 
 					'code: '    + error.code    + '\n' +
 					'message: ' + error.message + '\n');
 				
@@ -146,10 +146,11 @@ $(document).ready(function() {
 				icon: 'images/youarehere-2.png',
 				clickable: false,
 				draggable: true,
+				zIndex: 3
 			});
 			
 			google.maps.event.addListener(startMarker, 'dragend', function(mouseEvent) {
-				console.log("Moved start position to " + mouseEvent.latLng.toString());
+				console.info("Moved start position to " + mouseEvent.latLng.toString());
 				
 				if(currentMarker !== undefined) {
 					//start position moved; look up new directions
@@ -208,14 +209,14 @@ $(document).ready(function() {
 		function searchCallback(results, status) {
 			//if the search returned at least 3 results
 			if (status == google.maps.places.PlacesServiceStatus.OK && results.length >= 3 ) {
-				console.log("Found " + results.length + " places with smokes:");
+				console.info("Found " + results.length + " places with smokes:");
 				displayResults(results);
 			}
 			//if search returned less than three results
 			else if(status == google.maps.places.PlacesServiceStatus.ZERO_RESULTS || results.length < 3) {
 				//don't search farther than 32km
 				if(searchRadius > 32000) {
-					console.log("No smokes within 32000m of current location");
+					console.info("No smokes within 32000m of current location");
 					alert("This is fucked! There's nowhere to get smokes anywhere near you!");
 					return;
 				}
@@ -227,7 +228,7 @@ $(document).ready(function() {
 				placesService.nearbySearch(request, searchCallback);
 			}
 			else {
-				console.log("Error querying the the Google Map API:\n" + status);
+				console.error("Error querying the the Google Map API:\n" + status);
 				alert("Sorry, something fucked up! Try again later.");
 			}
 		}
@@ -240,13 +241,14 @@ $(document).ready(function() {
 		var existingLocations = smokesMarkers.map(function(marker) { return marker.getPosition(); });
 		displayBounds = new google.maps.LatLngBounds(startMarker.getPosition());
 		
+		console.group();
 		$.each(results, function(index, place) {
 			var loc = place.geometry.location;
 			var isNewLoc = $.grep(existingLocations, function(existing) { return existing.lat() === loc.lat() && existing.lng() === loc.lng()}).length === 0;
 			
 			//include this location in the display bounds
 			displayBounds.extend(loc);
-			console.log("  - " + place.name + " " + loc.toString());
+			console.info("  - " + place.name + " " + loc.toString());
 			
 			if(isNewLoc) {
 				//create a marker for this location and expand the map to show it
@@ -254,6 +256,7 @@ $(document).ready(function() {
 				createMarker(place, false /*index === 0*/);
 			}
 		});
+		console.groupEnd();
 		
 		//TODO: remove old markers outside a certain radius?
 		
@@ -273,7 +276,8 @@ $(document).ready(function() {
 				map: map,
 				position: loc,
 				icon: 'images/smoking-icon.png',
-				animation: google.maps.Animation.DROP
+				animation: google.maps.Animation.DROP,
+				zIndex:2
 			});
 			smokesMarkers.push(marker);
 			
@@ -328,7 +332,7 @@ $(document).ready(function() {
 			destination:destination,
 			travelMode: google.maps.TravelMode.DRIVING
 		};
-		console.log("Calculating directions from " + request.origin + " to " + request.destination);
+		console.info("Calculating directions from " + request.origin + " to " + request.destination);
 		
 		directionsService.route(request, function(result, status) {
 			if (status === google.maps.DirectionsStatus.OK) {
@@ -341,9 +345,10 @@ $(document).ready(function() {
 						icon: {
 							anchor: new google.maps.Point(10, 10),
 							url: 'images/marker-current-location.gif'
-						}
+						},
+						zIndex: 1
 					});
-					console.log("Created current position marker at" + currentPosition.toString());
+					console.info("Created current position marker at" + currentPosition.toString());
 				}
 				
 				//change the icon for start position
@@ -351,14 +356,14 @@ $(document).ready(function() {
 				
 				//display the route on the map
 				directionsDisplay.setDirections(result);
-				console.log("Successfully displayed route");
+				console.info("Successfully displayed route");
 			}
 			else if(status === google.maps.DirectionsStatus.ZERO_RESULTS) {
-				console.log("Error: No direction results found");
+				console.error("Error: No direction results found");
 				alert("Frozen mixed vegetable cocks!! Google couldn't figure out how to get there!");
 			}
 			else {
-				console.log("Error determining route: " + status);
+				console.error("Error determining route: " + status);
 				alert("Fuck off with the errors! Sorry, something fucked up while finding directions. Try again later.");
 			}
 		});
@@ -370,6 +375,6 @@ $(document).ready(function() {
 		var EARTH_RADIUS = 6371 ;
 		var distanceEw = (pos1.lng() - pos2.lng()) * Math.cos(startPosition.lat()) ;
 		var dcistanceNs = (pos1.lat() - pos2.lat()) ;
-		return Math.sqrt(distanceEw * distanceEw + dcistanceNs * dcistanceNs) * ER ;
+		return Math.sqrt(distanceEw * distanceEw + dcistanceNs * dcistanceNs) * EARTH_RADIUS ;
 	}
 });
