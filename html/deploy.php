@@ -7,6 +7,8 @@
 	 *		https://gist.github.com/1809044
 	 */
 
+	ob_start();
+
 	// The commands
 	$commands = array(
 		'echo $PWD',
@@ -48,3 +50,24 @@
 </pre>
 </body>
 </html>
+
+<?php 
+	function email_result($buffer) {
+		echo($buffer);
+		
+		// To send HTML mail, the Content-type header must be set
+		$headers  = 'MIME-Version: 1.0' . "\r\n";
+		$headers .= 'Content-type: text/html; charset=iso-8859-1' . "\r\n";
+	
+		//set email content
+		$to = "mark.monteiro23@gmail.com";//, travis.vanos@gmail.com";
+		$subject = "Website Code Updated on Smokes Lets Go (".$_SERVER['REMOTE_ADDR'].")";
+		$message = $buffer;
+		
+		//send the email
+		//TODO: uncomment once mail server has been set up
+		mail($to, $subject, $message, $headers);
+	}
+
+	email_result(ob_get_flush());
+?>
