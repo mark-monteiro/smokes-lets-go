@@ -1,75 +1,75 @@
 <!DOCTYPE html>
 <html>
-	<head>
-		<title>Smokes, Lets Go</title>
-		<meta name="description" content="Ya wanna smoke a dart bud?">
-		<meta name="keywords" content="cigarettes, smokes, darts, search">
-		<meta name="author" content="Mark Monteiro">
+    <head>
+        <title>Smokes, Lets Go</title>
+        <meta name="description" content="Ya wanna smoke a dart bud?">
+        <meta name="keywords" content="cigarettes, smokes, darts, search">
+        <meta name="author" content="Mark Monteiro">
 
-		<meta charset="utf-8">
-		<meta http-equiv="X-UA-Compatible" content="IE=edge">
-		<meta name="viewport" content="width=device-width, initial-scale=1">
-		
-		<script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
-		<script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB8C2AlHYWRL5OeK2jZXPIlaqI43qmTIp0&libraries=places"></script>
-		<script src="analytics.js" type="text/javascript"></script>
-		<script src="site.js" type="text/javascript"></script>
-		<script src="index.js" type="text/javascript"></script>
-		<noscript>Sorry bud, your browser doesn't support JavaScript. We can't find smokes without Javascript dummy!</noscript>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        
+        <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+        <script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB8C2AlHYWRL5OeK2jZXPIlaqI43qmTIp0&libraries=places"></script>
+        <script src="analytics.js" type="text/javascript"></script>
+        <script src="site.js" type="text/javascript"></script>
+        <script src="index.js" type="text/javascript"></script>
+        <noscript>Sorry bud, your browser doesn't support JavaScript. We can't find smokes without Javascript dummy!</noscript>
 
-		<!-- Bootstrap
-		<link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css"
-		<link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap-theme.min.css">
-		<script src="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
-		-->
-		<link href="//maxcdn.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.min.css" rel="stylesheet">
-		<link href='http://fonts.googleapis.com/css?family=Oswald' rel='stylesheet' type='text/css'>
-		<link rel="stylesheet" type="text/css" href="site.css">
-		<link rel="stylesheet" type="text/css" href="index.css">
-		
-		<!-- ios webclip icons -->
-		<link rel="apple-touch-icon" href="ios/icon.png" />
-		<link rel="apple-touch-icon" sizes="72x72" href="images/icon-72.png" />
-		<link rel="apple-touch-icon" sizes="114x114" href="images/icon@2x.png" />
-		<link rel="apple-touch-icon" sizes="144x144" href="images/icon-72@2x.png" />
-	</head>
+        <!-- Bootstrap
+        <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css"
+        <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap-theme.min.css">
+        <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
+        -->
+        <link href="//maxcdn.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.min.css" rel="stylesheet">
+        <link href='http://fonts.googleapis.com/css?family=Oswald' rel='stylesheet' type='text/css'>
+        <link rel="stylesheet" type="text/css" href="site.css">
+        <link rel="stylesheet" type="text/css" href="index.css">
+        
+        <!-- ios webclip icons -->
+        <link rel="apple-touch-icon" href="ios/icon.png" />
+        <link rel="apple-touch-icon" sizes="72x72" href="images/icon-72.png" />
+        <link rel="apple-touch-icon" sizes="114x114" href="images/icon@2x.png" />
+        <link rel="apple-touch-icon" sizes="144x144" href="images/icon-72@2x.png" />
+    </head>
 
-	<body>
-		<table id='layout'>
-			<tr>
-				<td>
-					<button>Smokes Let's Go!</button>
-					<div id='loader'><span class='padding'></span><span>Locating smokes</span><span class='ellipses'></span></div>
-				</td>
-			</tr>
-		</table>
-		
-		<div id="result-wrapper" class="hide">
-			<!--
-			<ul id="location-info" class="overlay">
-				<li><input type="checkbox" checked>Smokes</input></li>
-				<li><input type="checkbox">Liquor</input></li>
-				<li><input type="checkbox">Chicken Chips</input></li>
-			</ul>
-			-->
-			<div id="map-canvas"></div>
-			<!--<div id="results" class="overlay">Here are the search results</div>-->
-		</div>
-		
-		<div id="place-info" class='info'>
-			<h3>
-				<span class='name'></span>
-				<button href="#">
-					Directions&nbsp;<span class="fa fa-chevron-right"></span>
-				</button>
-			</h3>
-			<p class='address'></p>
-			<a class='phone'></a>
-		</div>
-		
-		<footer>
-			<a href='about.html'>About</a>
-			<a href='mailto:mark.monteiro23@gmail.com'>Contact</a>
-		</footer>
-	</body>
+    <body>
+        <table id='layout'>
+            <tr>
+                <td>
+                    <button>Smokes Let's Go!</button>
+                    <div id='loader'><span class='padding'></span><span>Locating smokes</span><span class='ellipses'></span></div>
+                </td>
+            </tr>
+        </table>
+        
+        <div id="result-wrapper" class="hide">
+            <!--
+            <ul id="location-info" class="overlay">
+                <li><input type="checkbox" checked>Smokes</input></li>
+                <li><input type="checkbox">Liquor</input></li>
+                <li><input type="checkbox">Chicken Chips</input></li>
+            </ul>
+            -->
+            <div id="map-canvas"></div>
+            <!--<div id="results" class="overlay">Here are the search results</div>-->
+        </div>
+        
+        <div id="place-info" class='info'>
+            <h3>
+                <span class='name'></span>
+                <button href="#">
+                    Directions&nbsp;<span class="fa fa-chevron-right"></span>
+                </button>
+            </h3>
+            <p class='address'></p>
+            <a class='phone'></a>
+        </div>
+        
+        <footer>
+            <a href='about.html'>About</a>
+            <a href='mailto:mark.monteiro23@gmail.com'>Contact</a>
+        </footer>
+    </body>
 </html>
