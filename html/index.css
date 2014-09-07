@@ -29,7 +29,7 @@ html, body {
     font-size: 1.5em;
 }
 
-.hide {
+.off-screen {
    position: absolute !important;
    top: -9999px !important;
    left: -9999px !important;

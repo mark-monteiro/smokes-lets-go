@@ -31,6 +31,7 @@ $(document).ready(function() {
     
     function initialize() {
         //initialize location tracking then continue other initialization
+        console.debug("Starting initialization...");
         initLocationService(finishInit);
         
         function initLocationService(callback) {
@@ -165,6 +166,7 @@ $(document).ready(function() {
             
             //set flag
             initialized = true;
+            console.debug("Finished initialization.");
         };
     }
     
@@ -237,7 +239,7 @@ $(document).ready(function() {
     function displayResults(results) {
         //TODO: order results by distance and limit to maximum 10 results
         //TODO: detect the first results in a better way
-        var firstResults = $("#result-wrapper").hasClass('hide');
+        var firstResults = $("#result-wrapper").hasClass('off-screen');
         var existingLocations = smokesMarkers.map(function(marker) { return marker.getPosition(); });
         displayBounds = new google.maps.LatLngBounds(startMarker.getPosition());
         
@@ -262,7 +264,7 @@ $(document).ready(function() {
         
         //show the map and stop the loader
         if(firstResults) {
-            $("#result-wrapper").hide().removeClass('hide').fadeIn('slow', function() {
+            $("#result-wrapper").hide().removeClass('off-screen').fadeIn('slow', function() {
                 window.clearInterval(loadAnimator);
                 //TODO: callback function here?
             });
