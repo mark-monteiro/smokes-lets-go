@@ -41,24 +41,24 @@
     <!-- Plugins -->
 
     <!-- Core plugins -->
-	<!-- <gap:plugin name="org.apache.cordova.battery-status" version="0.2.7" /> -->
-	<!-- <gap:plugin name="org.apache.cordova.camera" version="0.2.9" /> -->
-	<gap:plugin name="org.apache.cordova.console" version="0.2.7" />
-	<!-- <gap:plugin name="org.apache.cordova.contacts" version="0.2.11" /> -->
-	<gap:plugin name="org.apache.cordova.device" version="0.2.8" />
-	<gap:plugin name="org.apache.cordova.device-motion" version="0.2.6" />
-	<gap:plugin name="org.apache.cordova.device-orientation" version="0.3.5" />
-	<gap:plugin name="org.apache.cordova.dialogs" version="0.2.6" />
-	<!-- <gap:plugin name="org.apache.cordova.file" version="1.0.1" /> -->
-	<!-- <gap:plugin name="org.apache.cordova.file-transfer" version="0.4.2" /> -->
-	<gap:plugin name="org.apache.cordova.geolocation" version="0.3.7" />
-	<gap:plugin name="org.apache.cordova.globalization" version="0.2.6" />
-	<gap:plugin name="org.apache.cordova.inappbrowser" version="0.3.3" />
-	<gap:plugin name="org.apache.cordova.media" version="0.2.8" />
-	<!-- <gap:plugin name="org.apache.cordova.media-capture" version="0.2.8" /> -->
-	<gap:plugin name="org.apache.cordova.network-information" version="0.2.7" />
-	<gap:plugin name="org.apache.cordova.splashscreen" version="0.2.7" />
-	<gap:plugin name="org.apache.cordova.vibration" version="0.3.7" />
+    <!-- <gap:plugin name="org.apache.cordova.battery-status" version="0.2.7" /> -->
+    <!-- <gap:plugin name="org.apache.cordova.camera" version="0.2.9" /> -->
+    <gap:plugin name="org.apache.cordova.console" version="0.2.7" />
+    <!-- <gap:plugin name="org.apache.cordova.contacts" version="0.2.11" /> -->
+    <gap:plugin name="org.apache.cordova.device" version="0.2.8" />
+    <gap:plugin name="org.apache.cordova.device-motion" version="0.2.6" />
+    <gap:plugin name="org.apache.cordova.device-orientation" version="0.3.5" />
+    <gap:plugin name="org.apache.cordova.dialogs" version="0.2.6" />
+    <!-- <gap:plugin name="org.apache.cordova.file" version="1.0.1" /> -->
+    <!-- <gap:plugin name="org.apache.cordova.file-transfer" version="0.4.2" /> -->
+    <gap:plugin name="org.apache.cordova.geolocation" version="0.3.7" />
+    <gap:plugin name="org.apache.cordova.globalization" version="0.2.6" />
+    <gap:plugin name="org.apache.cordova.inappbrowser" version="0.3.3" />
+    <gap:plugin name="org.apache.cordova.media" version="0.2.8" />
+    <!-- <gap:plugin name="org.apache.cordova.media-capture" version="0.2.8" /> -->
+    <gap:plugin name="org.apache.cordova.network-information" version="0.2.7" />
+    <gap:plugin name="org.apache.cordova.splashscreen" version="0.2.7" />
+    <gap:plugin name="org.apache.cordova.vibration" version="0.3.7" />
 
 
     <!-- Third party plugins -->
