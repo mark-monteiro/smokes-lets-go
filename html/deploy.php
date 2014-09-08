@@ -1,19 +1,20 @@
 <?php
     //TODO: fix android key unlocking
     //TODO: deploy staging branch to test website
+
+    //exit immediately unless this is a update to the master branch 
+    //from the github service hook
+    //TODO: verify github secret
+    if($_SERVER['REQUEST_METHOD'] !== 'POST' || false /*check for github secret*/ || json_decode($_REQUEST['payload'])->ref !== "refs/heads/master") {
+        http_response_code(404);
+        exit(0);
+    }
     
     //define constants
     define("TEMP_DIR", "../buildTemp");
     define("SOURCE_ZIP", "../source.zip");
     define("ADOBE_CREDS", "mark.monteiro23@gmail.com:fF709iWn");
 
-    //if post request sent from GitHub
-    //only run for pushes to the 'master' branch
-    if($_SERVER['REQUEST_METHOD'] === 'POST' &&
-        json_decode($_REQUEST['payload'])->ref !== "refs/heads/master") {
-        exit(0);
-    }
-    
     ob_start();                            //start output buffer so we can email the page later
     register_shutdown_function('finish');  //register a shutdown function in case script exits unexpectedly
     set_time_limit(0);                     //remove execution time limit since this is a long script
