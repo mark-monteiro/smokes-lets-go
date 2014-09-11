@@ -1,6 +1,4 @@
-<?php include("cd /var/www/smokesletsgo.com/html/password_protect.php"); ?>
 <?php
-	echo "As of right now only Mark or Travis should deploy this";
     //TODO: fix android key unlocking
     //TODO: deploy staging branch to test website
     
