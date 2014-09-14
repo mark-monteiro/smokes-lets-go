@@ -27,14 +27,16 @@
     //exit immediately if this is not a valid request to this page
     if(!verifyRequest()) {
         //TODO: if we get here, show a user authentication form
-        http_response_code(404);
+        header('X-PHP-Response-Code: 404', true, 404);
         echo "<h1>404 Not Found</h1>";
         echo "The page that you have requested could not be found.";
         exit();
     }
     
     function verifyRequest() {
-        return true;
+        if(getenv('DEBUG')) {
+            return true;
+        }
 
         //check for post
         if($_SERVER['REQUEST_METHOD'] !== 'POST') {
@@ -126,12 +128,12 @@
 </pre>
 
 <h2>PhoneGap Build</h2>
-
+<pre>
 <?php
-    $authResult = buildStep('Authorizing with PhoneGap', 'pgAuth');
+    $authResult = buildStep('Authorize with PhoneGap', 'pgAuth');
     $token = $authResult->result->token;
-    buildStep('Unlocking Android signing key', 'pgUnlockKey', $token);
-    buildStep('Uploading source code to PhoneGap', 'pgUpdate', $token, $SOURCE_ZIP);
+    buildStep('Unlock Android signing key', 'pgUnlockKey', $token);
+    buildStep('Upload source code to PhoneGap', 'pgUpdate', $token, $SOURCE_ZIP);
 
     //TODO:
     // start the build
@@ -140,6 +142,7 @@
     // download completed app install files
     $downloadUrl = "https://build.phonegap.com/apps/".getenv('PHONEGAP_APP_ID');
 ?>
+</pre>
 
 <br/>
 Download new builds from: <a target='_blank' href='<?php echo($downloadUrl) ?>'><?php echo($downloadUrl) ?></a>
@@ -156,7 +159,7 @@ Download new builds from: <a target='_blank' href='<?php echo($downloadUrl) ?>'>
         public $error = null;
         public $result = null;
 
-        public function __construct($result, $success = true) {
+        public function __construct($result, $success = false) {
             $this->success = $success;
             if($success === true) {
                 $this->result = $result;
@@ -168,9 +171,10 @@ Download new builds from: <a target='_blank' href='<?php echo($downloadUrl) ?>'>
     }
 
     function buildStep($message, $function) {
-        echo($message.'...');
+        echo($message."...\n");
         $args = array_slice(func_get_args(), 2);
         $stepResult = call_user_func_array($function, $args);
+        echo($message.'...');
 
         //check for errors
         if($stepResult->success === false) {
@@ -182,6 +186,7 @@ Download new builds from: <a target='_blank' href='<?php echo($downloadUrl) ?>'>
             ?><span style='color:#6BE234;'>Done</span><br/><?php
         }
 
+        echo("==============================\n");
         return $stepResult;
     }
 
@@ -195,7 +200,7 @@ Download new builds from: <a target='_blank' href='<?php echo($downloadUrl) ?>'>
     function pgUnlockKey($accessToken) {
         //TODO: this is not working correctly. Make it work.
         //set parameters
-        $updateUrl = "https://build.phonegap.com/api/v1/keys/android/".getenv('PHONEGAP_APP_ID');
+        $updateUrl = "https://build.phonegap.com/api/v1/keys/android/".getenv('ANDROID_KEY_ID');
         $updateData = json_encode(array(
             'auth_token' => $accessToken,
             'data' => array(
@@ -235,7 +240,11 @@ Download new builds from: <a target='_blank' href='<?php echo($downloadUrl) ?>'>
 
         //send request
         try {
+            echo("Sending request to <a href='{$request->getUrl()}'>{$request->getUrl()}</a>\n");
+            echo("Request body:\n{$request->getBody()}\n");
             $response = $request->send();
+            echo("Got response ({$response->getStatus()})\n");
+            echo(htmlentities("Response body:\n{$response->getBody()}\n"));
         } catch (HTTP_Request2_Exception $e) {
             return new BuildStepResult('Http Request Error: ' . $e->getMessage());
         }
