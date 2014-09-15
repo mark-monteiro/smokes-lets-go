@@ -211,6 +211,7 @@ Download new builds from: <a target='_blank' href='<?php echo($downloadUrl) ?>'>
         $request = new HTTP_Request2($updateUrl, HTTP_Request2::METHOD_PUT);
         $request->setHeader('Content-type: multipart/form-data');
         $request->setBody($updateData);
+        //TODO: check status of 'locked' field before returning
         return phonegapApiRequest($request);
     }
     
@@ -222,7 +223,7 @@ Download new builds from: <a target='_blank' href='<?php echo($downloadUrl) ?>'>
         //send request and return result
         $request = new HTTP_Request2($updateUrl, HTTP_Request2::METHOD_PUT);
         $request->setHeader('Content-type: multipart/form-data');
-        $request->setBody($updateFile);
+        $request->addUpload('file', $updateFile);
         return phonegapApiRequest($request);
     }
 
@@ -240,11 +241,9 @@ Download new builds from: <a target='_blank' href='<?php echo($downloadUrl) ?>'>
 
         //send request
         try {
-            echo("Sending request to <a href='{$request->getUrl()}'>{$request->getUrl()}</a>\n");
-            echo("Request body:\n{$request->getBody()}\n");
+            echo("Sending request to <a href='{$request->getUrl()}'>{$request->getUrl()}</a>:\n{$request->getBody()}\n");
             $response = $request->send();
-            echo("Got response ({$response->getStatus()})\n");
-            echo(htmlentities("Response body:\n{$response->getBody()}\n"));
+            echo("Got response ({$response->getStatus()}):\n{$response->getBody()}\n");
         } catch (HTTP_Request2_Exception $e) {
             return new BuildStepResult('Http Request Error: ' . $e->getMessage());
         }
