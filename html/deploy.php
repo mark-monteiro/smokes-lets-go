@@ -4,6 +4,7 @@
     //NOTE: the following environment variables must be set for this script to work
     //  GITHUB_DEPLOY_HOOK_SECRET
     //  PHONEGAP_APP_ID
+    //  ANDROID_KEY_ID
     //  ANDROID_KEY_PW
     //  ANDROID_KEYSTORE_PW
     //  ADOBE_USERNAME
@@ -27,6 +28,7 @@
     //exit immediately if this is not a valid request to this page
     if(!verifyRequest()) {
         //TODO: if we get here, show a user authentication form
+        //TODO: if request is not valid, send a different email
         header('X-PHP-Response-Code: 404', true, 404);
         echo "<h1>404 Not Found</h1>";
         echo "The page that you have requested could not be found.";
@@ -241,7 +243,7 @@ Download new builds from: <a target='_blank' href='<?php echo($downloadUrl) ?>'>
 
         //send request
         try {
-            echo("Sending request to <a href='{$request->getUrl()}'>{$request->getUrl()}</a>:\n{$request->getBody()}\n");
+            echo("Sending request to <a href='{$request->getUrl()}'>{$request->getUrl()}</a>\n");
             $response = $request->send();
             echo("Got response ({$response->getStatus()}):\n{$response->getBody()}\n");
         } catch (HTTP_Request2_Exception $e) {
@@ -280,7 +282,8 @@ Download new builds from: <a target='_blank' href='<?php echo($downloadUrl) ?>'>
     
         //set email content
         $to = getenv('SERVER_ADMIN');
-        $subject = "Website Code Updated on Smokes Lets Go (".$_SERVER['REMOTE_ADDR'].")";
+        $branchName = 'master';
+        $subject = "Smokes Lets Go ({$branchName}) Updated by {$_SERVER['REMOTE_ADDR']}";
         $message = ob_get_flush();
 
         //send the email
