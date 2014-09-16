@@ -4,6 +4,7 @@
     //NOTE: the following environment variables must be set for this script to work
     //  GITHUB_DEPLOY_HOOK_SECRET
     //  PHONEGAP_APP_ID
+    //  ANDROID_KEY_ID
     //  ANDROID_KEY_PW
     //  ANDROID_KEYSTORE_PW
     //  ADOBE_USERNAME
@@ -25,14 +26,16 @@
     }, E_NOTICE | E_WARNING);
 
     //exit immediately if this is not a valid request to this page
-    if(!verifyRequest()) {
+    $verifyResult = verifyRequest();
+    if(verifyRequest() !== true) {
         //TODO: if we get here, show a user authentication form
-        header('X-PHP-Response-Code: 404', true, 404);
+        //TODO: if request is not valid, send a different email
+        header("X-PHP-Response-Code: $verifyResult", true, $verifyResult);
         echo "<h1>404 Not Found</h1>";
         echo "The page that you have requested could not be found.";
         exit();
     }
-    
+
     function verifyRequest() {
         if(getenv('DEBUG')) {
             return true;
@@ -40,23 +43,24 @@
 
         //check for post
         if($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            return false;
+            return 404;
         }
 
         //verify GitHub secret
         if(githubscret != getenv('GITHUB_DEPLOY_HOOK_SECRET')) {
-           return false;
+           return 404;
         }
 
         //make sure payload exists
         if(!isset($_REQUEST['payload'])) {
-            return false;
+            return 404;
         }
 
-        //make sure this is the master branch
-        $branch = json_decode($_REQUEST['payload']);
-        if($branch !== 'refs/heads/master') {
-            return false;
+        //make sure this is the current branch
+        $currentBranch = trim(str_replace('ref:', '', file_get_contents('.git/HEAD')));
+        $updatedBranch = json_decode($_REQUEST['payload']);
+        if($updatedBranch !== $currentBranch) {
+            return 200;
         }
 
         return true;
@@ -136,7 +140,6 @@
     buildStep('Upload source code to PhoneGap', 'pgUpdate', $token, $SOURCE_ZIP);
 
     //TODO:
-    // start the build
     // periodically check build progress
     // wait for build completion
     // download completed app install files
@@ -241,7 +244,7 @@ Download new builds from: <a target='_blank' href='<?php echo($downloadUrl) ?>'>
 
         //send request
         try {
-            echo("Sending request to <a href='{$request->getUrl()}'>{$request->getUrl()}</a>:\n{$request->getBody()}\n");
+            echo("Sending request to <a href='{$request->getUrl()}'>{$request->getUrl()}</a>\n");
             $response = $request->send();
             echo("Got response ({$response->getStatus()}):\n{$response->getBody()}\n");
         } catch (HTTP_Request2_Exception $e) {
@@ -280,7 +283,8 @@ Download new builds from: <a target='_blank' href='<?php echo($downloadUrl) ?>'>
     
         //set email content
         $to = getenv('SERVER_ADMIN');
-        $subject = "Website Code Updated on Smokes Lets Go (".$_SERVER['REMOTE_ADDR'].")";
+        $branchName = 'master';
+        $subject = "Smokes Lets Go ({$branchName}) Updated by {$_SERVER['REMOTE_ADDR']}";
         $message = ob_get_flush();
 
         //send the email
