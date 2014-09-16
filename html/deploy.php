@@ -26,15 +26,16 @@
     }, E_NOTICE | E_WARNING);
 
     //exit immediately if this is not a valid request to this page
-    if(!verifyRequest()) {
+    $verifyResult = verifyRequest();
+    if(verifyRequest() !== true) {
         //TODO: if we get here, show a user authentication form
         //TODO: if request is not valid, send a different email
-        header('X-PHP-Response-Code: 404', true, 404);
+        header("X-PHP-Response-Code: $verifyResult", true, $verifyResult);
         echo "<h1>404 Not Found</h1>";
         echo "The page that you have requested could not be found.";
         exit();
     }
-    
+
     function verifyRequest() {
         if(getenv('DEBUG')) {
             return true;
@@ -42,24 +43,24 @@
 
         //check for post
         if($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            return false;
+            return 404;
         }
 
         //verify GitHub secret
         if(githubscret != getenv('GITHUB_DEPLOY_HOOK_SECRET')) {
-           return false;
+           return 404;
         }
 
         //make sure payload exists
         if(!isset($_REQUEST['payload'])) {
-            return false;
+            return 404;
         }
 
         //make sure this is the current branch
         $currentBranch = trim(str_replace('ref:', '', file_get_contents('.git/HEAD')));
         $updatedBranch = json_decode($_REQUEST['payload']);
         if($updatedBranch !== $currentBranch) {
-            return false;
+            return 200;
         }
 
         return true;
