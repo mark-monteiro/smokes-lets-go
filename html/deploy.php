@@ -55,9 +55,10 @@
             return false;
         }
 
-        //make sure this is the master branch
-        $branch = json_decode($_REQUEST['payload']);
-        if($branch !== 'refs/heads/master') {
+        //make sure this is the current branch
+        $currentBranch = trim(str_replace('ref:', '', file_get_contents('.git/HEAD')));
+        $updatedBranch = json_decode($_REQUEST['payload']);
+        if($updatedBranch !== $currentBranch) {
             return false;
         }
 
@@ -138,7 +139,6 @@
     buildStep('Upload source code to PhoneGap', 'pgUpdate', $token, $SOURCE_ZIP);
 
     //TODO:
-    // start the build
     // periodically check build progress
     // wait for build completion
     // download completed app install files
