@@ -1,3 +1,7 @@
+# PhoneGap Directories
+platforms/
+plugins/
+
 # Repository Specific Files
 source.zip
-html/info.php
+www/info.php

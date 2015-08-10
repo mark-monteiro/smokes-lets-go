@@ -20,8 +20,8 @@ done
 
 #copy files to temporary directory
 echo "Copying files to temp directory..."
-eval "rsync -a $excludeArgs --exclude=/html $SOURCE_ROOT/* $TEMP_DIR"
-eval "rsync -a $excludeArgs $SOURCE_ROOT/html/* $TEMP_DIR"
+eval "rsync -a $excludeArgs --exclude=/www $SOURCE_ROOT/* $TEMP_DIR"
+eval "rsync -a $excludeArgs $SOURCE_ROOT/www/* $TEMP_DIR"
 
 #create archive
 echo "creating archive..."

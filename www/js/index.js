@@ -1,42 +1,85 @@
-$(document).ready(function() {
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+var app = {
     //local variables
-    var initialized = false;
-    var loadAnimator;
-    var checkDistance = true;
+    initialized: false,
+    loadAnimator: null,
+    checkDistance: true,
     
     //google.maps API objects
-    var map;
-    var placesService;
-    var directionsDisplay;
-    var directionsService;
-    var infoWindow;
-    var displayBounds;
+    map: null,
+    placesService: null,
+    directionsDisplay: null,
+    directionsService: null,
+    infoWindow: null,
+    displayBounds: null,
     
     //Locations and Markers
-    var locationWatcher;
-    var startPosition;
-    var startMarker;
-    var currentPosition;
-    var currentMarker;
-    var smokesMarkers = [];
+    locationWatcher: null,
+    startPosition: null,
+    startMarker: null,
+    currentPosition: null,
+    currentMarker: null,
+    smokesMarkers: [],
+
+    // Application Constructor
+    initialize: function() {
+        console.log('app initializing');
+        this.bindEvents();
+    },
+
+    // Bind Event Listeners
+    //
+    // Bind any events that are required on startup. Common events are:
+    // 'load', 'deviceready', 'offline', and 'online'.
+    bindEvents: function() {
+        document.addEventListener('deviceready', this.onDeviceReady, false);
+    },
+
+    // deviceready Event Handler
+    //
+    // The scope of 'this' is the event. In order to call the 'receivedEvent'
+    // function, we must explicitly call 'app.receivedEvent(...);'
+    onDeviceReady: function() {
+        console.log('deviceready event fired');
+        app.startup();
+    },
     
-    //start initialization
-    initialize();
-    
-    //on button click, start loader and perform search
-    $('button').click(function() {
-        startLoader();
-        findSmokes();
-    });
-    
-    function initialize() {
+    startup: function() {
+        //start initialization
+        this.initMap();
+        
+        //on button click, start loader and perform search
+        $('button').click(function() {
+            app.startLoader();
+            app.findSmokes();
+        });
+    },
+
+    initMap: function() {
         //initialize location tracking then continue other initialization
         console.debug("Starting initialization...");
         initLocationService(finishInit);
         
         function initLocationService(callback) {
             //start watching the user's current location
-            locationWatcher = navigator.geolocation.watchPosition(onSuccess, onError);
+            app.locationWatcher = navigator.geolocation.watchPosition(onSuccess, onError);
             
             offset = 0;
             function onSuccess(position) {
@@ -45,20 +88,20 @@ $(document).ready(function() {
                 offset += 0.05;
             
                 console.info("Got location: (" + position.coords.latitude +"," + position.coords.longitude +")");
-                var firstCall = currentPosition === undefined;
-                currentPosition = new google.maps.LatLng(position.coords.latitude, position.coords.longitude );
+                var firstCall = app.currentPosition === null;
+                app.currentPosition = new google.maps.LatLng(position.coords.latitude, position.coords.longitude );
 
-                if(firstCall && initialized === false) {
+                if(firstCall && app.initialized === false) {
                     //execute callback function on the first location update only
-                    callback(currentPosition);
-                    startPosition = currentPosition;
+                    callback(app.currentPosition);
+                    app.startPosition = app.currentPosition;
                 }
-                else if(initialized === true && currentMarker !== undefined) {
+                else if(app.initialized === true && app.currentMarker !== null) {
                     //update marker position
-                    currentMarker.setPosition(currentPosition);
+                    app.currentMarker.setPosition(app.currentPosition);
 
                     //TODO: only search if user is outside the original search bounds
-                    if (checkDistance && calcDistance(currentPosition, startPosition) >= 5 ) {
+                    if (app.checkDistance && app.calcDistance(app.currentPosition, app.startPosition) >= 5 ) {
                         // user has moved 5km from start position; ask if they want to search again
                         navigator.notification.confirm(
                             "We have detected that you've moved away from the original smokes. Want to search again?",
@@ -66,13 +109,13 @@ $(document).ready(function() {
                                 if(result === 1) {
                                     //update the start position to be the current position
                                     //and perform a new search
-                                    startPosition = currentPosition;
-                                    startMarker.setPosition(startPosition);
-                                    findSmokes();
+                                    app.startPosition = app.currentPosition;
+                                    app.startMarker.setPosition(app.startPosition);
+                                    app.findSmokes();
                                 }
                                 else {
                                     //never ask again
-                                    checkDistance = false;
+                                    app.checkDistance = false;
                                 }
                             },
                             "Confirm",
@@ -86,7 +129,7 @@ $(document).ready(function() {
                     'code: '    + error.code    + '\n' +
                     'message: ' + error.message + '\n');
                 
-                var posIntialized = currentPosition === undefined
+                var posIntialized = app.currentPosition === null;
                 var errorWord = posIntialized ? "determining" : "updating";
                 
                 if (error.code == error.PERMISSION_DENIED) {
@@ -100,14 +143,14 @@ $(document).ready(function() {
                 }
                 
                 //stop the location updater
-                navigator.geolocation.clearWatch(locationWatcher);
-                locationWatcher = undefined;
+                navigator.geolocation.clearWatch(app.locationWatcher);
+                app.locationWatcher = null;
             }
-        }
+        };
         
         function finishInit(position) {
             //create the map
-            map = new google.maps.Map(document.getElementById('map-canvas'), {
+            app.map = new google.maps.Map(document.getElementById('map-canvas'), {
                 center: position,
                 zoom: 10,
                 panControl: false,
@@ -118,20 +161,20 @@ $(document).ready(function() {
             });
             
             //initialize places service
-            placesService = new google.maps.places.PlacesService(map);
+            app.placesService = new google.maps.places.PlacesService(app.map);
             
             //initialize direction services
-            directionsService = new google.maps.DirectionsService();
-            directionsDisplay = new google.maps.DirectionsRenderer({
+            app.directionsService = new google.maps.DirectionsService();
+            app.directionsDisplay = new google.maps.DirectionsRenderer({
                 markerOptions: {
                     visible: false
                 }
             });
-            directionsDisplay.setMap(map);
+            app.directionsDisplay.setMap(app.map);
             
             //create info window
-            infoWindow = new google.maps.InfoWindow();
-            google.maps.event.addListener(infoWindow, 'domready', function(){
+            app.infoWindow = new google.maps.InfoWindow();
+            google.maps.event.addListener(app.infoWindow, 'domready', function(){
                 //remove close button when opened
                 $(".gm-style-iw")
                     .css("left", function() {
@@ -141,41 +184,41 @@ $(document).ready(function() {
             });
             
             //create a marker for the start location
-            startMarker = new google.maps.Marker({
-                map: map,
+            app.startMarker = new google.maps.Marker({
+                map: app.map,
                 position: position,
-                icon: 'images/youarehere-2.png',
+                icon: 'img/youarehere-2.png',
                 clickable: false,
                 draggable: true,
                 zIndex: 3
             });
             
-            google.maps.event.addListener(startMarker, 'dragend', function(mouseEvent) {
+            google.maps.event.addListener(app.startMarker, 'dragend', function(mouseEvent) {
                 console.info("Moved start position to " + mouseEvent.latLng.toString());
                 
-                if(currentMarker !== undefined) {
+                if(app.currentMarker !== null) {
                     //start position moved; look up new directions
-                    var destination = directionsDisplay.getDirections().routes[0].overview_path.slice(-1)[0];
-                    calcRoute(destination);
+                    var destination = app.directionsDisplay.getDirections().routes[0].overview_path.slice(-1)[0];
+                    app.calcRoute(destination);
                 }
-                else if(!displayBounds.contains(mouseEvent.latLng)) {
+                else if(!app.displayBounds.contains(mouseEvent.latLng)) {
                     //start location moved outside result bounds; perform new search
-                    findSmokes();
+                    app.findSmokes();
                 }
             })
             
             //set flag
-            initialized = true;
+            app.initialized = true;
             console.debug("Finished initialization.");
         };
-    }
-    
+    },
+
     //starts the loading animation
-    function startLoader() {
+    startLoader: function() {
         //start animating the ellipses
         var ellipses = $('#loader span.ellipses');
         var padding = $('#loader span.padding');
-        loadAnimator = window.setInterval(animateLoader, 1000);
+        app.loadAnimator = window.setInterval(animateLoader, 1000);
         
         //hide the button and show the loader
         $('#layout button').fadeOut(function() {
@@ -188,31 +231,31 @@ $(document).ready(function() {
             ellipses.text(Array(length + 1).join("."));
             padding.text(Array(length + 1).join('\xA0'));    //add padding to the front of the loader to keep it centred
         }
-    }
-    
+    },
+
     //performs search
-    function findSmokes() {
+    findSmokes: function() {
         //wait for initialization to complete
-        if ( !initialized ) {
-            setTimeout(findSmokes, 250);
+        if ( !app.initialized ) {
+            setTimeout(app.findSmokes, 250);
             return;
         }
         
         //perform search
         var searchRadius = 250;
         var request = {
-            location: startMarker.getPosition(),
+            location: app.startMarker.getPosition(),
             radius: searchRadius.toString(),
             /*openNow: true,*/
             types: ['convenience_store', 'gas_station']
         };
-        placesService.nearbySearch(request, searchCallback);
+        app.placesService.nearbySearch(request, searchCallback);
         
         function searchCallback(results, status) {
             //if the search returned at least 3 results
             if (status == google.maps.places.PlacesServiceStatus.OK && results.length >= 3 ) {
                 console.info("Found " + results.length + " places with smokes:");
-                displayResults(results);
+                app.displayResults(results);
             }
             //if search returned less than three results
             else if(status == google.maps.places.PlacesServiceStatus.ZERO_RESULTS || results.length < 3) {
@@ -227,21 +270,21 @@ $(document).ready(function() {
                 searchRadius *= 2;
                 request.radius = searchRadius.toString();
                 console.log("Expanding search radius to " + request.radius + " meters");
-                placesService.nearbySearch(request, searchCallback);
+                app.placesService.nearbySearch(request, searchCallback);
             }
             else {
                 console.error("Error querying the the Google Map API:\n" + status);
                 alert("Sorry, something fucked up! Try again later.");
             }
         }
-    }
-    
-    function displayResults(results) {
+    },
+
+    displayResults: function(results) {
         //TODO: order results by distance and limit to maximum 10 results
         //TODO: detect the first results in a better way
         var firstResults = $("#result-wrapper").hasClass('off-screen');
-        var existingLocations = smokesMarkers.map(function(marker) { return marker.getPosition(); });
-        displayBounds = new google.maps.LatLngBounds(startMarker.getPosition());
+        var existingLocations = app.smokesMarkers.map(function(marker) { return marker.getPosition(); });
+        app.displayBounds = new google.maps.LatLngBounds(app.startMarker.getPosition());
         
         console.group();
         $.each(results, function(index, place) {
@@ -249,12 +292,12 @@ $(document).ready(function() {
             var isNewLoc = $.grep(existingLocations, function(existing) { return existing.lat() === loc.lat() && existing.lng() === loc.lng()}).length === 0;
             
             //include this location in the display bounds
-            displayBounds.extend(loc);
+            app.displayBounds.extend(loc);
             console.info("  - " + place.name + " " + loc.toString());
             
             if(isNewLoc) {
                 //create a marker for this location and expand the map to show it
-                map.fitBounds(displayBounds);
+                app.map.fitBounds(app.displayBounds);
                 createMarker(place, false /*index === 0*/);
             }
         });
@@ -265,7 +308,7 @@ $(document).ready(function() {
         //show the map and stop the loader
         if(firstResults) {
             $("#result-wrapper").hide().removeClass('off-screen').fadeIn('slow', function() {
-                window.clearInterval(loadAnimator);
+                window.clearInterval(app.loadAnimator);
                 //TODO: callback function here?
             });
         }
@@ -275,13 +318,13 @@ $(document).ready(function() {
         function createMarker(place, open) {
             var loc = place.geometry.location;
             var marker = new google.maps.Marker({
-                map: map,
+                map: app.map,
                 position: loc,
-                icon: 'images/smoking-icon.png',
+                icon: 'img/smoking-icon.png',
                 animation: google.maps.Animation.DROP,
                 zIndex:2
             });
-            smokesMarkers.push(marker);
+            app.smokesMarkers.push(marker);
             
             if(open === true) {
                 setInfoWindow(place, marker);
@@ -316,48 +359,48 @@ $(document).ready(function() {
                 
                 //set directions button action
                 content.find('button').click(function() {
-                    calcRoute(place.geometry.location);
-                    infoWindow.close();
+                    app.calcRoute(place.geometry.location);
+                    app.infoWindow.close();
                 });
                 
                 //set the window content and open it
-                infoWindow.setContent(content[0]);
-                infoWindow.open(map, marker);
+                app.infoWindow.setContent(content[0]);
+                app.infoWindow.open(app.map, marker);
             }
         }
-    }
-    
+    },
+
     //gets the route to the specified location and displays it on the map
-    function calcRoute(destination) {
+    calcRoute: function(destination) {
         var request = {
-            origin:startMarker.getPosition(),
-            destination:destination,
+            origin: app.startMarker.getPosition(),
+            destination: destination,
             travelMode: google.maps.TravelMode.DRIVING
         };
         console.info("Calculating directions from " + request.origin + " to " + request.destination);
         
-        directionsService.route(request, function(result, status) {
+        app.directionsService.route(request, function(result, status) {
             if (status === google.maps.DirectionsStatus.OK) {
                 //create marker for the updating current location
-                if(currentMarker == undefined) {
-                    currentMarker = new google.maps.Marker({
-                        map: map,
-                        position: currentPosition,
+                if(app.currentMarker == null) {
+                    app.currentMarker = new google.maps.Marker({
+                        map: app.map,
+                        position: app.currentPosition,
                         optimized: false,
                         icon: {
                             anchor: new google.maps.Point(10, 10),
-                            url: 'images/marker-current-location.gif'
+                            url: 'img/marker-current-location.gif'
                         },
                         zIndex: 1
                     });
-                    console.info("Created current position marker at" + currentPosition.toString());
+                    console.info("Created current position marker at" + app.currentPosition.toString());
                 }
                 
                 //change the icon for start position
-                startMarker.setIcon('images/start.png');
+                app.startMarker.setIcon('img/start.png');
                 
                 //display the route on the map
-                directionsDisplay.setDirections(result);
+                app.directionsDisplay.setDirections(result);
                 console.info("Successfully displayed route");
             }
             else if(status === google.maps.DirectionsStatus.ZERO_RESULTS) {
@@ -369,14 +412,16 @@ $(document).ready(function() {
                 alert("Fuck off with the errors! Sorry, something fucked up while finding directions. Try again later.");
             }
         });
-    }
-    
+    },
+
     //utility function to calculate the distance (in km)
     //between two instances of google.maps.LatLng objects
-    function calcDistance(pos1, pos2) {
+    calcDistance: function(pos1, pos2) {
         var EARTH_RADIUS = 6371 ;
-        var distanceEw = (pos1.lng() - pos2.lng()) * Math.cos(startPosition.lat()) ;
+        var distanceEw = (pos1.lng() - pos2.lng()) * Math.cos(app.startPosition.lat()) ;
         var dcistanceNs = (pos1.lat() - pos2.lat()) ;
         return Math.sqrt(distanceEw * distanceEw + dcistanceNs * dcistanceNs) * EARTH_RADIUS ;
     }
-});
+};
+
+app.initialize();
