@@ -1,7 +1,4 @@
-# PhoneGap Directories
-platforms/
-plugins/
-
-# Repository Specific Files
-source.zip
-www/info.php
+# Jekyll Specific
+_site/
+.sass-cache/
+.jekyll-metadata
