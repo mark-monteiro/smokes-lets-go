@@ -64,7 +64,7 @@ var app = {
     startup: function() {
         //start initialization
         this.initMap();
-        
+
         //on button click, start loader and perform search
         $('button').click(function() {
             app.startLoader();
@@ -424,4 +424,4 @@ var app = {
     }
 };
 
-app.initialize();
+$(document).ready(function() { app.startup(); });
