@@ -1,8 +1,11 @@
 #about-wrapper {
-    width: 600px;
+    width: 700px;
     position: absolute;
     top: 50%;
     left: 50%;
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
+    box-sizing: border-box;
     -webkit-transform: translate(-50%, -50%);
     -moz-transform: translate(-50%, -50%);
     -o-transform: translate(-50%, -50%);
@@ -20,6 +23,8 @@ section#team .member {
     display: inline-block;
     width: 25%;
     padding: 7px;
+    -webkit-box-sizing: border-box;
+    -moz-box-sizing: border-box;
     box-sizing: border-box;
     text-align: center;
     vertical-align: top;
@@ -28,6 +33,8 @@ section#team .member {
     section#team .member > img {
         width: 100%;
         border: 2px black solid;
+        -webkit-box-sizing: border-box;
+        -moz-box-sizing: border-box;
         box-sizing: border-box;
     }
 
@@ -63,7 +70,7 @@ section#team .member {
     vertical-align: middle;
 }
 
-@media (max-width: 599px) {
+@media (max-width: 699px) {
     #about-wrapper {
       position: static;
       -webkit-transform: none;
