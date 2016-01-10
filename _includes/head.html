@@ -30,8 +30,8 @@
         <!-- Stylesheets -->
         <link href="lib/font-awesome/css/font-awesome.min.css" rel="stylesheet" type='text/css'>
         <link href='https://fonts.googleapis.com/css?family=Oswald' rel='stylesheet' type='text/css'>
-        <link href="css/site.css" rel="stylesheet" type="text/css">
-        <link href="css/index.css" rel="stylesheet" type="text/css">
+        <link href="/css/site.css" rel="stylesheet" type="text/css">
+        {% if page.css %}<link href="{{ page.css }}" rel="stylesheet" type="text/css">{% endif %}
         
         <!-- ios webclip icons -->
         <link rel="apple-touch-icon" href="ios/icon.png" />
