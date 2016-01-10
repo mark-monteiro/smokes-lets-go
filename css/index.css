@@ -1,8 +1,3 @@
-html, body {
-    height: 100%;
-    margin: 0;
-}
-
 body {
     -webkit-touch-callout: none;                /* prevent callout to copy image, etc when tap to hold */
     -webkit-text-size-adjust: none;             /* prevent webkit from resizing text to fit */
@@ -11,7 +6,7 @@ body {
 
 #layout {
     width: 100%;
-    height: 100%;
+    height: 100vh;
 }
 
 #layout td  {

@@ -2,21 +2,14 @@
  * Layout
  */
 body {
+    min-height: 100vh;
+    margin: 0;
     background-image: -ms-linear-gradient(top, #DAD9DE 0%, #EFEFEF 100%);
     background-image: -moz-linear-gradient(top, #DAD9DE 0%, #EFEFEF 100%);
     background-image: -o-linear-gradient(top, #DAD9DE 0%, #EFEFEF 100%);
     background-image: -webkit-gradient(linear, left top, left bottom, color-stop(0, #DAD9DE), color-stop(1, #EFEFEF));
     background-image: -webkit-linear-gradient(top, #DAD9DE 0%, #EFEFEF 100%);
     background-image: linear-gradient(to bottom, #DAD9DE 0%, #EFEFEF 100%);
-}
-
-#content-wrapper {
-    width: 60%;
-    min-width: 600px;
-    margin: 10px auto 5px;
-    padding: 25px 7%;
-    background-color: white;
-    border: 2px solid black
 }
 
 /*
