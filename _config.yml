@@ -18,5 +18,5 @@ lsi: false
 source: .
 
 # Github Defaults
-highlighter: pygments
+highlighter: rouge
 #github: [Repository metadata]
