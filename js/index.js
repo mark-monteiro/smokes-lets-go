@@ -174,14 +174,6 @@ var app = {
             
             //create info window
             app.infoWindow = new google.maps.InfoWindow();
-            google.maps.event.addListener(app.infoWindow, 'domready', function(){
-                //remove close button when opened
-                $(".gm-style-iw")
-                    .css("left", function() {
-                        return ($(this).parent().width() - $(this).width()) / 2;
-                    })
-                    .next("div").remove();
-            });
             
             //create a marker for the start location
             app.startMarker = new google.maps.Marker({
