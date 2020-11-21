@@ -136,10 +136,10 @@ var app = {
                     alert("HORSECOCK, we can't find you smokes unless you give this app permission to use your location. Fuck sakes.");
                 }
                 else if (error.code == error.POSITION_UNAVAILABLE) {
-                    alert('WHAT in the FUCK?! (An error occured while ' + errorWord + ' your location)');
+                    alert('WHAT in the FUCK?! (An error occurred while ' + errorWord + ' your location)');
                 }
                 else {
-                    alert('Where in the fuck are you?! (An error occured while ' + errorWord + ' your location)');
+                    alert('Where in the fuck are you?! (An error occurred while ' + errorWord + ' your location)');
                 }
                 
                 //stop the location updater
