@@ -42,27 +42,8 @@ section#team .member {
         margin-bottom: 0.3em;
     }
     
-    section#team  .member .hr {
-        width: 20%;
-        height: 2px;
-        background-color: #ddd;
-        margin: 0px auto;
-        margin-bottom: 17px;
-    }
-
     section#team .member .position {
         font-style: italic;
-    }
-    
-    section#team  .member ul {
-        list-style: none;
-        display: inline-block;
-        margin: 0;
-        padding: 0;
-    }
-
-    section#team  .member ul li {
-        float: left;
     }
 
 .map-icons {
