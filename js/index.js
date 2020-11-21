@@ -238,7 +238,6 @@ var app = {
         var request = {
             location: app.startMarker.getPosition(),
             radius: searchRadius.toString(),
-            /*openNow: true,*/
             types: ['convenience_store', 'gas_station']
         };
         app.placesService.nearbySearch(request, searchCallback);
